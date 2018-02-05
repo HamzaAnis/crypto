@@ -91,6 +91,29 @@ func GenerateKey(rand io.Reader) (publicKey PublicKey, privateKey PrivateKey, er
 	return publicKey, privateKey, nil
 }
 
+// GenerateKey generates a public/private key pair using a custom SHA512 has
+func GenerateKeyFromHash([32]byte digest) (publicKey PublicKey, privateKey PrivateKey, err error) {
+
+	privateKey = make([]byte, PrivateKeySize)
+	publicKey = make([]byte, PublicKeySize)
+
+	digest[0] &= 248
+	digest[31] &= 127
+	digest[31] |= 64
+
+	var A edwards25519.ExtendedGroupElement
+	var hBytes [32]byte
+	copy(hBytes[:], digest[:])
+	edwards25519.GeScalarMultBase(&A, &hBytes)
+	var publicKeyBytes [32]byte
+	A.ToBytes(&publicKeyBytes)
+
+	copy(privateKey[32:], publicKeyBytes[:])
+	copy(publicKey, publicKeyBytes[:])
+
+	return publicKey, privateKey, nil
+}
+
 // Sign signs the message with privateKey and returns a signature. It will
 // panic if len(privateKey) is not PrivateKeySize.
 func Sign(privateKey PrivateKey, message []byte) []byte {
