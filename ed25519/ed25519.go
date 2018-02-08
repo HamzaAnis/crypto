@@ -92,11 +92,16 @@ func GenerateKey(rand io.Reader) (publicKey PublicKey, privateKey PrivateKey, er
 }
 
 // GenerateKey generates a public/private key pair using a custom SHA512 has
-func GenerateKeyFromHash([32]byte digest) (publicKey PublicKey, privateKey PrivateKey, err error) {
+func GenerateKeyFromHash(hash [64]byte) (publicKey PublicKey, privateKey PrivateKey, err error) {
 
 	privateKey = make([]byte, PrivateKeySize)
 	publicKey = make([]byte, PublicKeySize)
 
+	cS := string(hash[:])
+
+	cSB := []byte(hex.EncodeToString([]byte(cS)))
+	copy(privateKey, cSB[:32])
+	digest := privateKey
 	digest[0] &= 248
 	digest[31] &= 127
 	digest[31] |= 64
